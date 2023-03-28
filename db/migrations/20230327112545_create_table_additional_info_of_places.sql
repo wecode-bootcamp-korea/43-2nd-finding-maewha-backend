@@ -7,8 +7,8 @@ CREATE TABLE place_additional_information_contents(
 	gender VARCHAR(100) NOT NULL,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
-	CONSTRAINT place_additional_information_contents_place_id_pk FOREIGN KEY (place_id) REFERENCES places (id),
-	CONSTRAINT place_additional_information_contents_additional_information_id_pk FOREIGN KEY(additional_information_id) REFERENCES place_additional_information_titles (id)
+	CONSTRAINT place_additional_contents_place_id_pk FOREIGN KEY (place_id) REFERENCES places (id),
+	CONSTRAINT place_additional_contents_additional_information_id_pk FOREIGN KEY(additional_information_id) REFERENCES place_additional_information_titles (id)
 );
 
 -- migrate:down

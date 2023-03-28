@@ -6,8 +6,8 @@ CREATE TABLE place_basic_information_contents(
 	content VARCHAR(2000) NOT NULL,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
-	CONSTRAINT place_basic_information_contents_place_id_pk FOREIGN KEY (place_id) REFERENCES places (id),
-	CONSTRAINT place_basic_information_contents_basic_information_id_pk FOREIGN KEY(basic_information_id) REFERENCES place_basic_information_titles (id)
+	CONSTRAINT place_basic_contents_place_id_pk FOREIGN KEY (place_id) REFERENCES places (id),
+	CONSTRAINT place_basic_contents_basic_information_id_pk FOREIGN KEY(basic_information_id) REFERENCES place_basic_information_titles (id)
 );
 
 -- migrate:down
