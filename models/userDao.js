@@ -1,5 +1,16 @@
 const { appDataSource } = require("./data-source.js");
 
+const getUserById = async (id) => {
+  const result = await appDataSource.query(
+    `
+    SELECT *
+    FROM users
+    WHERE id=?`,
+    [id]
+  );
+  return result[0];
+};
+
 const createUser = async (email, name, kakaoId, gender) => {
   return appDataSource.query(
     `
@@ -33,6 +44,7 @@ const checkUserByKakaoId = async (kakaoId) => {
 };
 
 module.exports = {
+  getUserById,
   createUser,
   checkUserByKakaoId,
 };
