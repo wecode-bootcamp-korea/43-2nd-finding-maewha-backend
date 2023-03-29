@@ -17,7 +17,7 @@ const kakaoSignIn = async (kakaoToken) => {
       throw error;
     });
 
-  const { data } = getKakaoUser;
+  let { data } = getKakaoUser;
   console.log(data);
 
   const {
