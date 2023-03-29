@@ -3,7 +3,15 @@ const { appDataSource } = require("./data-source.js");
 const getUserById = async (id) => {
   const result = await appDataSource.query(
     `
-    SELECT id, social_type_id, social_user_id, name, email, gender, created_at, updated_at
+    SELECT 
+    id, 
+    social_type_id, 
+    social_user_id, 
+    name, 
+    email,
+    gender,
+    created_at,
+    updated_at
     FROM users
     WHERE id=?`,
     [id]
