@@ -13,3 +13,4 @@ CREATE TABLE users(
 
 -- migrate:down
 DROP TABLE users;
+
