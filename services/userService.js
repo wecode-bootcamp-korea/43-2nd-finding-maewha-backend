@@ -31,9 +31,12 @@ const kakaoSignIn = async (kakaoToken) => {
 
   if (!user) {
     user = await userDao.createUser(email, name, kakaoId, gender);
+    return jwt.sign({ user: user.insertId }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN,
+    });
   }
 
-  return jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+  return jwt.sign({ user: user }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
 };
