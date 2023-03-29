@@ -3,6 +3,14 @@ const axios = require("axios");
 
 const userDao = require("../models/userDao");
 
+const getUserLibraries = async (userId) => {
+  return await userDao.getLibraries(userId);
+};
+
+const getPlacesInUserLibrary = async (userId, libraryId) => {
+  return await userDao.getPlacesInLibrary(userId, libraryId);
+};
+
 const kakaoSignIn = async (kakaoToken) => {
   const getKakaoUser = await axios
     .get("https://kapi.kakao.com/v2/user/me", {
@@ -27,17 +35,22 @@ const kakaoSignIn = async (kakaoToken) => {
       kakao_account: { email, gender },
     },
   } = getKakaoUser;
-  const user = await userDao.getUserByKakaoId(kakaoId);
+  let user = await userDao.getUserByKakaoId(kakaoId);
 
   if (!user) {
     user = await userDao.createUser(email, name, kakaoId, gender);
+    return jwt.sign({ user: user.insertId }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN,
+    });
   }
 
-  return jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+  return jwt.sign({ user: user }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
 };
 
 module.exports = {
   kakaoSignIn,
+  getUserLibraries,
+  getPlacesInUserLibrary,
 };
