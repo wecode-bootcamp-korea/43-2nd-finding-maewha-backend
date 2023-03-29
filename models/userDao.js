@@ -3,7 +3,7 @@ const { appDataSource } = require("./data-source.js");
 const getUserById = async (id) => {
   const result = await appDataSource.query(
     `
-    SELECT *
+    SELECT id, social_type_id, social_user_id, name, email, gender, created_at, updated_at
     FROM users
     WHERE id=?`,
     [id]
@@ -13,8 +13,7 @@ const getUserById = async (id) => {
 
 const createUser = async (email, name, kakaoId, gender) => {
   return appDataSource.query(
-    `
-    INSERT INTO users(
+    `INSERT INTO users(
       email,
       name,
       social_type_id,
@@ -32,7 +31,7 @@ const createUser = async (email, name, kakaoId, gender) => {
   );
 };
 
-const checkUserByKakaoId = async (kakaoId) => {
+const getUserByKakaoId = async (kakaoId) => {
   const [result] = await appDataSource.query(
     `SELECT
     u.social_user_id AS socialId
@@ -46,5 +45,5 @@ const checkUserByKakaoId = async (kakaoId) => {
 module.exports = {
   getUserById,
   createUser,
-  checkUserByKakaoId,
+  getUserByKakaoId,
 };

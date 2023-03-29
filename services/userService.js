@@ -19,17 +19,23 @@ const kakaoSignIn = async (kakaoToken) => {
 
   const { data } = getKakaoUser;
   console.log(data);
-  const kakaoId = data.id;
-  const name = data.properties.nickname;
-  const email = data.kakao_account.email;
-  const gender = data.kakao_account.gender;
-  let user = await userDao.checkUserByKakaoId(kakaoId);
+
+  const {
+    data: {
+      id: kakaoId,
+      properties: { nickname: name, profile_image: profileImage },
+      kakao_account: { email, gender },
+    },
+  } = getKakaoUser;
+  const user = await userDao.getUserByKakaoId(kakaoId);
 
   if (!user) {
     user = await userDao.createUser(email, name, kakaoId, gender);
   }
 
-  return jwt.sign({ userId: user.id }, process.env.JWT_SECRET);
+  return jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN,
+  });
 };
 
 module.exports = {

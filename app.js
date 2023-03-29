@@ -17,6 +17,4 @@ const createApp = () => {
   return app;
 };
 
-//https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=2acd083400a6093e68c4b82d5b090002&redirect_uri=http://localhost:3001/oauth/kakao
-
 module.exports = { createApp };
