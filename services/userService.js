@@ -1,10 +1,9 @@
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
 const axios = require("axios");
 
 const userDao = require("../models/userDao");
 
-const kakaoSignin = async (kakaoToken) => {
+const kakaoSignIn = async (kakaoToken) => {
   const getKakaoToken = await axios.get("https://kapi.kakao.com/v2/user/me", {
     headers: {
       authorization: `Bearer ${kakaoToken}`,
@@ -25,10 +24,10 @@ const kakaoSignin = async (kakaoToken) => {
   const name = data.properties.nickname;
   const email = data.kakao_account.email;
   const gender = data.kakao_account.gender;
-  const userId = await userDao.checkUserbyKakaoid(kakaoid);
+  const userId = await userDao.checkUserByKakaoId(kakaoid);
 
   if (!userId) {
-    const newUser = await userDao.createUser(email, name, kakaoid, gender);
+    const newUser = await userDao.createUser(email, name, kakaoId, gender);
 
     return jwt.sign({ userId: newUser.insertId }, process.env.JWT_SECRET);
   }
@@ -37,5 +36,5 @@ const kakaoSignin = async (kakaoToken) => {
 };
 
 module.exports = {
-  kakaoSignin,
+  kakaoSignIn,
 };

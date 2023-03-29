@@ -1,8 +1,7 @@
 const userService = require("../services/userService");
 const { catchAsync } = require("../utils/error");
 
-const kakaoSignin = catchAsync(async (req, res) => {
-  console.log("HI");
+const kakaoSignIn = catchAsync(async (req, res) => {
   const kakaoToken = req.headers.authorization;
 
   if (!kakaoToken) {
@@ -12,11 +11,11 @@ const kakaoSignin = catchAsync(async (req, res) => {
     throw err;
   }
 
-  const accessToken = await userService.kakaoSignin(kakaoToken);
+  const accessToken = await userService.kakaoSignIn(kakaoToken);
 
   return res.status(200).json({ accessToken: accessToken });
 });
 
 module.exports = {
-  kakaoSignin,
+  kakaoSignIn,
 };

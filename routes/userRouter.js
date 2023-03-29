@@ -3,6 +3,6 @@ const userController = require("../controllers/userController");
 
 const router = express.Router();
 
-router.post("/kakao", userController.kakaoSignin);
+router.post("/kakao", userController.kakaoSignIn);
 
 module.exports = { router };
