@@ -17,7 +17,7 @@ const kakaoSignIn = async (kakaoToken) => {
       throw error;
     });
 
-  let { data } = getKakaoUser;
+  const { data } = getKakaoUser;
   console.log(data);
 
   const {
@@ -27,7 +27,7 @@ const kakaoSignIn = async (kakaoToken) => {
       kakao_account: { email, gender },
     },
   } = getKakaoUser;
-  const user = await userDao.getUserByKakaoId(kakaoId);
+  let user = await userDao.getUserByKakaoId(kakaoId);
 
   if (!user) {
     user = await userDao.createUser(email, name, kakaoId, gender);
