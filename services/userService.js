@@ -20,11 +20,11 @@ const kakaoSignIn = async (kakaoToken) => {
 
   const { data } = getKakaoToken;
   console.log(data);
-  const kakaoid = data.id;
+  const kakaoId = data.id;
   const name = data.properties.nickname;
   const email = data.kakao_account.email;
   const gender = data.kakao_account.gender;
-  const userId = await userDao.checkUserByKakaoId(kakaoid);
+  const userId = await userDao.checkUserByKakaoId(kakaoId);
 
   if (!userId) {
     const newUser = await userDao.createUser(email, name, kakaoId, gender);
