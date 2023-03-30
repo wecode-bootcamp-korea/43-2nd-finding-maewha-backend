@@ -3,6 +3,14 @@ const axios = require("axios");
 
 const userDao = require("../models/userDao");
 
+const getUserLibraries = async (userId) => {
+  return await userDao.getLibraries(userId);
+};
+
+const getPlacesInUserLibrary = async (userId, libraryId) => {
+  return await userDao.getPlacesInLibrary(userId, libraryId);
+};
+
 const kakaoSignIn = async (kakaoToken) => {
   const getKakaoUser = await axios
     .get("https://kapi.kakao.com/v2/user/me", {
@@ -43,4 +51,6 @@ const kakaoSignIn = async (kakaoToken) => {
 
 module.exports = {
   kakaoSignIn,
+  getUserLibraries,
+  getPlacesInUserLibrary,
 };
