@@ -27,13 +27,16 @@ const kakaoSignIn = async (kakaoToken) => {
       kakao_account: { email, gender },
     },
   } = getKakaoUser;
-  const user = await userDao.getUserByKakaoId(kakaoId);
+  let user = await userDao.getUserByKakaoId(kakaoId);
 
   if (!user) {
     user = await userDao.createUser(email, name, kakaoId, gender);
+    return jwt.sign({ user: user.insertId }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN,
+    });
   }
 
-  return jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+  return jwt.sign({ user: user }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
 };
