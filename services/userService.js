@@ -11,6 +11,14 @@ const getPlacesInUserLibrary = async (userId, libraryId) => {
   return await userDao.getPlacesInLibrary(userId, libraryId);
 };
 
+const deletePlaceLike = async (userId, placeId) => {
+  return await userDao.deletePlaceLike(userId, placeId);
+};
+
+const deleteLibrary = async (userId, libraryId) => {
+  return await userDao.deleteLibrary(userId, libraryId);
+};
+
 const kakaoSignIn = async (kakaoToken) => {
   const getKakaoUser = await axios
     .get("https://kapi.kakao.com/v2/user/me", {
@@ -53,4 +61,6 @@ module.exports = {
   kakaoSignIn,
   getUserLibraries,
   getPlacesInUserLibrary,
+  deletePlaceLike,
+  deleteLibrary,
 };
