@@ -6,5 +6,7 @@ const router = express.Router();
 router.post("/kakao", userController.kakaoSignIn);
 router.get("/libraries", loginRequired, userController.getUserLibraries);
 router.get("", loginRequired, userController.getPlacesInUserLibrary);
+router.delete("", loginRequired, userController.deletePlaceLike);
+router.delete("/libraries", loginRequired, userController.deleteLibrary);
 
 module.exports = { router };

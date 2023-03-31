@@ -51,6 +51,52 @@ const getPlacesInLibrary = async (userId, libraryId) => {
     throw error;
   }
 };
+const deletePlaceLike = async (userId, placeId) => {
+  try {
+    return await appDataSource.query(
+      `DELETE 
+      FROM liked_places 
+      WHERE place_id = ?
+      AND libraries_id IN (SELECT id FROM libraries
+      WHERE user_id =?)
+      `,
+      [placeId, userId]
+    );
+  } catch (err) {
+    const error = new Error("INVLID_DATA_INPUT");
+    error.statusCode = 400;
+    throw error;
+  }
+};
+
+const deleteLibrary = async (userId, libraryId) => {
+  const queryRunner = appDataSource.createQueryRunner();
+
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
+  try {
+    await queryRunner.query(
+      `DELETE
+      FROM liked_places
+      WHERE libraries_id = ?
+      `,
+      [libraryId]
+    );
+
+    await queryRunner.query(
+      `DELETE
+      FROM libraries
+      WHERE id = ? AND user_id = ?
+      `,
+      [libraryId, userId]
+    );
+    await queryRunner.commitTransaction();
+  } catch (err) {
+    const error = new Error("INVLID_DATA_INPUT");
+    error.statusCode = 400;
+    throw error;
+  }
+};
 
 const getUserById = async (id) => {
   const result = await appDataSource.query(
@@ -108,4 +154,6 @@ module.exports = {
   getUserByKakaoId,
   getLibraries,
   getPlacesInLibrary,
+  deletePlaceLike,
+  deleteLibrary,
 };
