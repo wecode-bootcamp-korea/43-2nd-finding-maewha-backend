@@ -51,6 +51,101 @@ const getPlacesInLibrary = async (userId, libraryId) => {
     throw error;
   }
 };
+const deletePlaceLike = async (userId, placeId) => {
+  const queryRunner = appDataSource.createQueryRunner();
+
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
+  try {
+    let userCheck = 1;
+    const checkOwner = await queryRunner.query(
+      `SELECT *
+      FROM libraries
+      JOIN liked_places
+      ON 
+      libraries.id = liked_places.libraries_id
+      WHERE libraries.user_id = ? 
+      AND liked_places.place_id = ?
+      `,
+      [userId, placeId]
+    );
+    if ((checkOwner[0].id = undefined)) {
+      validUser = 0;
+      throw err;
+    }
+
+    await queryRunner.query(
+      `DELETE 
+      FROM liked_places 
+      WHERE place_id = ?
+      AND libraries_id IN (SELECT id 
+        FROM libraries
+        WHERE user_id =?)
+      `,
+      [placeId, userId]
+    );
+    await queryRunner.commitTransaction();
+  } catch (err) {
+    if ((validUser = 0)) {
+      const error = new Error("NOT_YOUR_LIBRARY");
+      await queryRunner.rollbackTransaction();
+      err.statusCode = 400;
+      throw error;
+    } else {
+      const error = new Error("INVALID_DATA_INPUT");
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+};
+
+const deleteLibrary = async (userId, libraryId) => {
+  const queryRunner = appDataSource.createQueryRunner();
+
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
+  try {
+    let userCheck = 1;
+    const checkOwner = await queryRunner.query(
+      `SELECT * FROM libraries
+			WHERE id = ? AND user_id = ?
+			`,
+      [libraryId, userId]
+    );
+    if ((checkOwner[0].id = undefined)) {
+      userCheck = 0;
+      throw err;
+    }
+
+    await queryRunner.query(
+      `DELETE
+      FROM liked_places
+      WHERE libraries_id = ?
+      `,
+      [libraryId]
+    );
+
+    await queryRunner.query(
+      `DELETE
+      FROM libraries
+      WHERE id = ? AND user_id = ?
+      `,
+      [libraryId, userId]
+    );
+    await queryRunner.commitTransaction();
+  } catch (err) {
+    if ((userCheck = 0)) {
+      const error = new Error("NOT_YOUR_LIBRARY");
+      await queryRunner.rollbackTransaction();
+      err.statusCode = 400;
+      throw error;
+    } else {
+      const error = new Error("INVALID_DATA_INPUT");
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+};
 
 const getUserById = async (id) => {
   const result = await appDataSource.query(
@@ -108,4 +203,6 @@ module.exports = {
   getUserByKakaoId,
   getLibraries,
   getPlacesInLibrary,
+  deletePlaceLike,
+  deleteLibrary,
 };
