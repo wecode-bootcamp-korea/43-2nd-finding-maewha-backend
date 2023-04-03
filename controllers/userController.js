@@ -56,6 +56,20 @@ const createPlaceLike = catchAsync(async (req, res) => {
   return res.status(201).json({ message: "insertion_completed" });
 });
 
+const updateLibraryName = catchAsync(async (req, res) => {
+  const userId = req.user.id;
+  const { libraryId } = req.params;
+  const { newLibraryName } = req.query;
+
+  if (!userId || !libraryId || !newLibraryName) {
+    return res.status(400).json({ message: "KEY_ERROR" });
+  }
+
+  await userService.updateLibraryName(userId, libraryId, newLibraryName);
+
+  return res.status(200).json({ message: "library_name_changed" });
+});
+
 const deletePlaceLike = catchAsync(async (req, res) => {
   const userId = req.user.id;
   const { placeId } = req.params;
@@ -94,6 +108,7 @@ module.exports = {
   getPlacesInUserLibrary,
   createLibrary,
   createPlaceLike,
+  updateLibraryName,
   deletePlaceLike,
   deleteLibrary,
 };

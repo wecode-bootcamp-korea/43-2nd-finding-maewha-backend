@@ -8,6 +8,11 @@ router.post("", loginRequired, userController.createPlaceLike);
 router.post("/libraries", loginRequired, userController.createLibrary);
 router.get("/libraries", loginRequired, userController.getUserLibraries);
 router.get("", loginRequired, userController.getPlacesInUserLibrary);
+router.patch(
+  "/libraries/:libraryId",
+  loginRequired,
+  userController.updateLibraryName
+);
 router.delete(
   "/libraries/places/:placeId",
   loginRequired,
