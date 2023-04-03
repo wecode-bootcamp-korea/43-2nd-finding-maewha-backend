@@ -51,13 +51,76 @@ const getPlacesInLibrary = async (userId, libraryId) => {
     throw error;
   }
 };
+
+const createLibrary = async (userId, libraryName) => {
+  try {
+    return await appDataSource.query(
+      `INSERT INTO libraries (user_id, name)
+      VALUES(?, ?)
+			`,
+      [userId, libraryName]
+    );
+  } catch (err) {
+    const error = new Error("INVALID_DATA_INPUT");
+    error.statusCode = 500;
+    throw error;
+  }
+};
+
+const createPlaceLike = async (userId, libraryId, placeId) => {
+  const queryRunner = appDataSource.createQueryRunner();
+
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
+
+  try {
+    const [checkOwner] = await queryRunner.query(
+      `SELECT * FROM libraries
+      WHERE id = ? AND user_id = ?
+      `,
+      [libraryId, userId]
+    );
+    if (!checkOwner) {
+      await queryRunner.rollbackTransaction();
+      const error = new Error("NOT_YOUR_LIBRARY");
+      error.statusCode = 401;
+      throw error;
+    }
+
+    const [checkLiked] = await queryRunner.query(
+      `SELECT user_id FROM libraries
+       JOIN liked_places ON liked_places.libraries_id = libraries.id
+       WHERE libraries.user_id = ? AND liked_places.place_id = ?
+      `,
+      [userId, placeId]
+    );
+    if (!checkLiked) {
+      await queryRunner.rollbackTransaction();
+      const error = new Error("LIKE_ALREADY_EXIST");
+      error.statusCode = 401;
+      throw error;
+    }
+
+    await queryRunner.query(
+      `INSERT INTO liked_places(libraries_id, place_id)
+      VALUES(?, ?)
+      `,
+      [libraryId, placeId]
+    );
+    await queryRunner.commitTransaction();
+  } catch (err) {
+    await queryRunner.rollbackTransaction();
+    err.statusCode = 500;
+    throw err;
+  }
+};
+
 const deletePlaceLike = async (userId, placeId) => {
   const queryRunner = appDataSource.createQueryRunner();
 
   await queryRunner.connect();
   await queryRunner.startTransaction();
   try {
-    let userCheck = 1;
     const checkOwner = await queryRunner.query(
       `SELECT *
       FROM libraries
@@ -69,9 +132,8 @@ const deletePlaceLike = async (userId, placeId) => {
       `,
       [userId, placeId]
     );
-    if ((checkOwner[0].id = undefined)) {
-      validUser = 0;
-      throw err;
+    if (checkOwner[0] === undefined) {
+      throw new Error("YOU_DID_NOT_LIKED_IT");
     }
 
     await queryRunner.query(
@@ -86,16 +148,9 @@ const deletePlaceLike = async (userId, placeId) => {
     );
     await queryRunner.commitTransaction();
   } catch (err) {
-    if ((validUser = 0)) {
-      const error = new Error("NOT_YOUR_LIBRARY");
-      await queryRunner.rollbackTransaction();
-      err.statusCode = 400;
-      throw error;
-    } else {
-      const error = new Error("INVALID_DATA_INPUT");
-      error.statusCode = 400;
-      throw error;
-    }
+    await queryRunner.rollbackTransaction();
+    err.statusCode = 400;
+    throw err;
   }
 };
 
@@ -105,16 +160,14 @@ const deleteLibrary = async (userId, libraryId) => {
   await queryRunner.connect();
   await queryRunner.startTransaction();
   try {
-    let userCheck = 1;
     const checkOwner = await queryRunner.query(
       `SELECT * FROM libraries
-			WHERE id = ? AND user_id = ?
-			`,
+      WHERE id = ? AND user_id = ?
+      `,
       [libraryId, userId]
     );
-    if ((checkOwner[0].id = undefined)) {
-      userCheck = 0;
-      throw err;
+    if (checkOwner[0] === undefined) {
+      throw new Error("NOT_YOUR_LIBRARY");
     }
 
     await queryRunner.query(
@@ -134,36 +187,10 @@ const deleteLibrary = async (userId, libraryId) => {
     );
     await queryRunner.commitTransaction();
   } catch (err) {
-    if ((userCheck = 0)) {
-      const error = new Error("NOT_YOUR_LIBRARY");
-      await queryRunner.rollbackTransaction();
-      err.statusCode = 400;
-      throw error;
-    } else {
-      const error = new Error("INVALID_DATA_INPUT");
-      error.statusCode = 400;
-      throw error;
-    }
+    await queryRunner.rollbackTransaction();
+    err.statusCode = 400;
+    throw err;
   }
-};
-
-const getUserById = async (id) => {
-  const result = await appDataSource.query(
-    `
-    SELECT 
-    id, 
-    social_type_id, 
-    social_user_id, 
-    name, 
-    email,
-    gender,
-    created_at,
-    updated_at
-    FROM users
-    WHERE id=?`,
-    [id]
-  );
-  return result[0];
 };
 
 const createUser = async (email, name, kakaoId, gender) => {
@@ -186,6 +213,25 @@ const createUser = async (email, name, kakaoId, gender) => {
   );
 };
 
+const getUserById = async (id) => {
+  const result = await appDataSource.query(
+    `
+    SELECT 
+    id, 
+    social_type_id, 
+    social_user_id, 
+    name, 
+    email,
+    gender,
+    created_at,
+    updated_at
+    FROM users
+    WHERE id=?`,
+    [id]
+  );
+  return result[0];
+};
+
 const getUserByKakaoId = async (kakaoId) => {
   const [result] = await appDataSource.query(
     `SELECT
@@ -203,6 +249,8 @@ module.exports = {
   getUserByKakaoId,
   getLibraries,
   getPlacesInLibrary,
-  deletePlaceLike,
+  createLibrary,
+  createPlaceLike,
   deleteLibrary,
+  deletePlaceLike,
 };
