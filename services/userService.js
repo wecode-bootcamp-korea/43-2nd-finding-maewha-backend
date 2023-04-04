@@ -11,6 +11,14 @@ const getPlacesInUserLibrary = async (userId, libraryId) => {
   return await userDao.getPlacesInLibrary(userId, libraryId);
 };
 
+const createLibrary = async (userId, libraryName) => {
+  return await userDao.createLibrary(userId, libraryName);
+};
+
+const createPlaceLike = async (userId, libraryId, placeId) => {
+  return await userDao.createPlaceLike(userId, libraryId, placeId);
+};
+
 const deletePlaceLike = async (userId, placeId) => {
   return await userDao.deletePlaceLike(userId, placeId);
 };
@@ -61,6 +69,8 @@ module.exports = {
   kakaoSignIn,
   getUserLibraries,
   getPlacesInUserLibrary,
+  createLibrary,
+  createPlaceLike,
   deletePlaceLike,
   deleteLibrary,
 };

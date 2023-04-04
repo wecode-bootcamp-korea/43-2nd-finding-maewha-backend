@@ -30,6 +30,32 @@ const getPlacesInUserLibrary = catchAsync(async (req, res) => {
   return res.status(200).json({ data: getPlacesInUserLibrary });
 });
 
+const createLibrary = catchAsync(async (req, res) => {
+  const userId = req.user.id;
+  const { libraryName } = req.body;
+
+  if (!userId || !libraryName) {
+    return res.status(400).json({ message: "KEY_ERROR" });
+  }
+
+  await userService.createLibrary(userId, libraryName);
+
+  return res.status(201).json({ message: "wishlist_created" });
+});
+
+const createPlaceLike = catchAsync(async (req, res) => {
+  const userId = req.user.id;
+  const { libraryId, placeId } = req.body;
+
+  if (!userId || !libraryId || !placeId) {
+    return res.status(400).json({ message: "KEY_ERROR" });
+  }
+
+  await userService.createPlaceLike(userId, libraryId, placeId);
+
+  return res.status(201).json({ message: "insertion_completed" });
+});
+
 const deletePlaceLike = catchAsync(async (req, res) => {
   const userId = req.user.id;
   const { placeId } = req.params;
@@ -66,6 +92,8 @@ module.exports = {
   kakaoSignIn,
   getUserLibraries,
   getPlacesInUserLibrary,
+  createLibrary,
+  createPlaceLike,
   deletePlaceLike,
   deleteLibrary,
 };
