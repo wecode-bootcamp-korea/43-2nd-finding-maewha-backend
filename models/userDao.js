@@ -41,7 +41,6 @@ const getPlacesInLibrary = async (userId, libraryId) => {
       JOIN liked_places AS lp ON li.id = lp.libraries_id
       JOIN places AS pl ON pl.id = lp.place_id
       WHERE li.user_id = ? AND lp.libraries_id = ?
-
       `,
       [userId, libraryId]
     );
@@ -112,24 +111,61 @@ const createPlaceLike = async (userId, libraryId, placeId) => {
     await queryRunner.rollbackTransaction();
     err.statusCode = 500;
     throw err;
+  } finally {
+    await queryRunner.release();
+  }
+};
+
+const updateLibraryName = async (userId, libraryId, newLibraryName) => {
+  const queryRunner = appDataSource.createQueryRunner();
+
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
+
+  try {
+    const [checkOwner] = await queryRunner.query(
+      `SELECT * FROM libraries
+      WHERE id = ? AND user_id = ?
+      `,
+      [libraryId, userId]
+    );
+    if (!checkOwner) {
+      const error = new Error("NOT_YOUR_LIBRARY");
+      error.statusCode = 401;
+      throw error;
+    }
+
+    await queryRunner.query(
+      `UPDATE libraries
+      SET name = ?
+      WHERE id = ?
+      `,
+      [newLibraryName, libraryId]
+    );
+    await queryRunner.commitTransaction();
+  } catch (err) {
+    await queryRunner.rollbackTransaction();
+    err.statusCode = 500;
+    throw err;
+  } finally {
+    await queryRunner.release();
   }
 };
 
 const deletePlaceLike = async (userId, placeId) => {
   const queryRunner = appDataSource.createQueryRunner();
-
   await queryRunner.connect();
   await queryRunner.startTransaction();
   try {
     const [checkOwner] = await queryRunner.query(
       `SELECT *
-      FROM libraries
-      JOIN liked_places
+       FROM libraries
+       JOIN liked_places
       ON 
       libraries.id = liked_places.libraries_id
       WHERE libraries.user_id = ? 
       AND liked_places.place_id = ?
-      `,
+       `,
       [userId, placeId]
     );
     if (!checkOwner) {
@@ -154,19 +190,20 @@ const deletePlaceLike = async (userId, placeId) => {
     await queryRunner.rollbackTransaction();
     err.statusCode = 500;
     throw err;
+  } finally {
+    await queryRunner.release();
   }
 };
 
 const deleteLibrary = async (userId, libraryId) => {
   const queryRunner = appDataSource.createQueryRunner();
-
   await queryRunner.connect();
   await queryRunner.startTransaction();
   try {
     const [checkOwner] = await queryRunner.query(
       `SELECT * FROM libraries
-      WHERE id = ? AND user_id = ?
-      `,
+       WHERE id = ? AND user_id = ?
+       `,
       [libraryId, userId]
     );
     if (!checkOwner) {
@@ -183,7 +220,6 @@ const deleteLibrary = async (userId, libraryId) => {
       `,
       [libraryId]
     );
-
     await queryRunner.query(
       `DELETE
       FROM libraries
@@ -196,6 +232,8 @@ const deleteLibrary = async (userId, libraryId) => {
     await queryRunner.rollbackTransaction();
     err.statusCode = 500;
     throw err;
+  } finally {
+    await queryRunner.release();
   }
 };
 
@@ -257,6 +295,7 @@ module.exports = {
   getPlacesInLibrary,
   createLibrary,
   createPlaceLike,
+  updateLibraryName,
   deleteLibrary,
   deletePlaceLike,
 };

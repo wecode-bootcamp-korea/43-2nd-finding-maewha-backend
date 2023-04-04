@@ -19,6 +19,10 @@ const createPlaceLike = async (userId, libraryId, placeId) => {
   return await userDao.createPlaceLike(userId, libraryId, placeId);
 };
 
+const updateLibraryName = async (userId, libraryId, newLibraryName) => {
+  return await userDao.updateLibraryName(userId, libraryId, newLibraryName);
+};
+
 const deletePlaceLike = async (userId, placeId) => {
   return await userDao.deletePlaceLike(userId, placeId);
 };
@@ -71,6 +75,7 @@ module.exports = {
   getPlacesInUserLibrary,
   createLibrary,
   createPlaceLike,
+  updateLibraryName,
   deletePlaceLike,
   deleteLibrary,
 };
