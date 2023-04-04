@@ -121,7 +121,7 @@ const deletePlaceLike = async (userId, placeId) => {
   await queryRunner.connect();
   await queryRunner.startTransaction();
   try {
-    const checkOwner = await queryRunner.query(
+    const [checkOwner] = await queryRunner.query(
       `SELECT *
       FROM libraries
       JOIN liked_places
@@ -132,8 +132,11 @@ const deletePlaceLike = async (userId, placeId) => {
       `,
       [userId, placeId]
     );
-    if (checkOwner[0] === undefined) {
-      throw new Error("YOU_DID_NOT_LIKED_IT");
+    if (!checkOwner) {
+      await queryRunner.rollbackTransaction();
+      const error = new Error("YOU_DID_NOT_LIKED_IT");
+      error.statusCode = 400;
+      throw error;
     }
 
     await queryRunner.query(
@@ -149,7 +152,7 @@ const deletePlaceLike = async (userId, placeId) => {
     await queryRunner.commitTransaction();
   } catch (err) {
     await queryRunner.rollbackTransaction();
-    err.statusCode = 400;
+    err.statusCode = 500;
     throw err;
   }
 };
@@ -160,14 +163,17 @@ const deleteLibrary = async (userId, libraryId) => {
   await queryRunner.connect();
   await queryRunner.startTransaction();
   try {
-    const checkOwner = await queryRunner.query(
+    const [checkOwner] = await queryRunner.query(
       `SELECT * FROM libraries
       WHERE id = ? AND user_id = ?
       `,
       [libraryId, userId]
     );
-    if (checkOwner[0] === undefined) {
-      throw new Error("NOT_YOUR_LIBRARY");
+    if (!checkOwner) {
+      await queryRunner.rollbackTransaction();
+      const error = new Error("NOT_YOUR_LIBRARY");
+      error.statusCode = 400;
+      throw error;
     }
 
     await queryRunner.query(
@@ -188,7 +194,7 @@ const deleteLibrary = async (userId, libraryId) => {
     await queryRunner.commitTransaction();
   } catch (err) {
     await queryRunner.rollbackTransaction();
-    err.statusCode = 400;
+    err.statusCode = 500;
     throw err;
   }
 };
