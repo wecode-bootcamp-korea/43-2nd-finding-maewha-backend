@@ -1,6 +1,6 @@
 const { appDataSource } = require('./data-source')
 
-const placesDetail = async (placeId) => {
+const placesDetail = async (userId, placeId) => {
   const result = await appDataSource.query(
  `SELECT 
  AVG(r.rating) AS avgRating, 
@@ -19,6 +19,13 @@ const placesDetail = async (placeId) => {
  rl.likesCount, 
  rrr.reviewList
 FROM places p
+LEFT JOIN (
+  SELECT libraries.id 
+  FROM libraries
+  INNER JOIN liked_places 
+  ON libraries.id = liked_places.libraries_id
+  WHERE libraries.user_id = ?
+  ) AS likePlaces ON p.id = likePlaces.id
 JOIN (
   SELECT 
 rpt.tag_id,
@@ -107,10 +114,10 @@ LEFT JOIN (
    LEFT JOIN tags t ON t.id = rpt.tag_id
    GROUP BY r.id
  ) rr
- INNER JOIN reviews r ON rr.id = r.id
+ INNER JOIN reviews r ON rrr.id = r.id
  INNER JOIN users u ON r.user_id = u.id
  GROUP BY r.place_id
-) AS rrr ON p.id = r.place_id
+) AS r ON p.id = r.place_id
 WHERE p.id = ?
 GROUP BY 
  p.id,
@@ -125,7 +132,7 @@ GROUP BY
  pi.images,
  pbic.basic_information,
  rl.likesCount,
- rrr.reviewList`, [placeId, placeId, placeId]
+ rrr.reviewList`, [userId, placeId, placeId, placeId]
 
 );
 
