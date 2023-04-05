@@ -1,6 +1,6 @@
 const { appDataSource } = require('./data-source')
 
-const placesDetail = async (userId, placeId) => {
+const placesDetail = async (placeId) => {
   const result = await appDataSource.query(
  `SELECT 
  AVG(r.rating) AS avgRating, 
@@ -120,7 +120,7 @@ ORDER BY
 LIMIT 
     2
 )AS mlt ON p.id = mlt.place_id
-WHERE p.id = 1
+WHERE p.id = ?
 GROUP BY 
  p.id,
  p.social_id,
