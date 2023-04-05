@@ -21,7 +21,7 @@ const getPlacesByReviews = async (placeId) => {
 
 
 module.exports = {
-  getAllPlaces,
+  placesDetail,
   getPlacesById,
   getPlacesByReviews
 }

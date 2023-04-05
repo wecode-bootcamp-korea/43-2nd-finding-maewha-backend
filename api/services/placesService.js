@@ -1,7 +1,7 @@
-const { placesDao } = require("../models");
+const { placeDao } = require("../models");
 
 const getAllPlaces = async () => {
-  return placesDao.getAllPlaces()
+  return placeDao.getAllPlaces()
 }
 
 module.exports = {

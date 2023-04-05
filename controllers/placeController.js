@@ -1,4 +1,4 @@
-const { placesService } = require("../services");
+const { placeService } = require("../services");
 const { catchAsync } = require("../utils/error");
 
 
@@ -6,10 +6,13 @@ const getAllPlaces = catchAsync(async (req, res) => {
   const userId = req.user.id;
   const {placeId} = req.query;
 
-  const result = await placesService.getAllPlaces(userId, placeId);
+  const result = await placeService.getAllPlaces(userId, placeId);
 
   return res.status(200).json({ result });
 });
+
+
+
 
 module.exports = {
   getAllPlaces

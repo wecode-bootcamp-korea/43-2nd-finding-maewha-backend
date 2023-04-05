@@ -1,5 +1,5 @@
-const placesService = require("./placesService");
+const placeService = require("./placeService");
 
 module.exports = {
-  placesService
+  placeService
 }

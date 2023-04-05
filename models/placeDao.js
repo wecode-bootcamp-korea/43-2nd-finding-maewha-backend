@@ -17,26 +17,9 @@ const placesDetail = async (userId, placeId) => {
  pi.images, 
  pbic.basic_information AS basiclInformation, 
  rl.likesCount, 
- rrr.reviewList
+ rrr.reviewList,
+ mlt.mostLikedTags
 FROM places p
-LEFT JOIN (
-  SELECT libraries.id 
-  FROM libraries
-  INNER JOIN liked_places 
-  ON libraries.id = liked_places.libraries_id
-  WHERE libraries.user_id = ?
-  ) AS likePlaces ON p.id = likePlaces.id
-JOIN (
-  SELECT 
-rpt.tag_id,
-tags.name,
-COUNT(*) AS count
-FROM reviews_of_places_with_tags rpt
-JOIN tags ON tags.id = rpt.tag_id
-WHERE rpt.place_id = ?
-GROUP BY rpt.tag_id, tags.name
-HAVING COUNT(*) > (SELECT COUNT(*) FROM reviews WHERE place_id = ?) / 3
-  ) AS countTags
 LEFT JOIN reviews r ON p.id = r.place_id
 LEFT JOIN (
  SELECT 
@@ -114,11 +97,30 @@ LEFT JOIN (
    LEFT JOIN tags t ON t.id = rpt.tag_id
    GROUP BY r.id
  ) rr
- INNER JOIN reviews r ON rrr.id = r.id
+ INNER JOIN reviews r ON rr.id = r.id
  INNER JOIN users u ON r.user_id = u.id
  GROUP BY r.place_id
-) AS r ON p.id = r.place_id
-WHERE p.id = ?
+) AS rrr ON p.id = r.place_id
+LEFT JOIN (
+  SELECT
+  	place_id,
+  	JSON_ARRAYAGG(
+  	JSON_OBJECT(
+    "id", rpt.tag_id,
+    "tagName", t.name
+  	)
+  ) AS mostLikedTags
+FROM 
+    reviews_of_places_with_tags rpt
+INNER JOIN tags t ON t.id = rpt.tag_id
+GROUP BY 
+    rpt.place_id
+ORDER BY 
+    COUNT(rpt.tag_id) DESC 
+LIMIT 
+    2
+)AS mlt ON p.id = mlt.place_id
+WHERE p.id = 1
 GROUP BY 
  p.id,
  p.social_id,
@@ -131,20 +133,39 @@ GROUP BY
  paic.additional_information,
  pi.images,
  pbic.basic_information,
- rl.likesCount,
- rrr.reviewList`, [userId, placeId, placeId, placeId]
-
+ rl.likesCount,      
+ rrr.reviewList`, [placeId, placeId, placeId]
 );
-
 return result
 }
 
+async function insertLikedPlace(userId, placeId) {
+  const result = await appDataSource.query(
+    `INSERT INTO liked_places (libraries_id, place_id) 
+    VALUES (
+      (SELECT id FROM libraries WHERE user_id = ?),
+      ?
+    )`,
+    [userId, placeId]
+  );
+  return result;
+}
+
+module.exports = {
+  placesDetail,
+  insertLikedPlace
+}
+
+
+
 // -- 찜하기
 // LEFT JOIN (
-// SELECT libraries.id from libraries
-// JOIN liked_places ON libraries.id = liked_places.libraries_id
-// WHERE libraries.user_id = ?
-// ) AS likePlaces
+  // SELECT libraries.id
+  // FROM libraries
+  // INNER JOIN liked_places
+  // ON libraries.id = liked_places.libraries_id
+  // WHERE libraries.user_id = ?
+  // ) AS likePlaces ON p.id = likePlaces.id
 
 
 
@@ -157,19 +178,6 @@ return result
 
 
 
-
-
-
-module.exports = {
-  placesDetail
-}
-
-
-
-
-
-
-
 // -- 찜하기
 // LEFT JOIN (
 // SELECT libraries.id from libraries
@@ -177,3 +185,15 @@ module.exports = {
 // WHERE libraries.user_id = ?
 // ) AS likePlaces 
 
+// -- 많이 선택된 태그
+// JOIN (
+//   SELECT 
+// rpt.tag_id,
+// tags.name,
+// COUNT(*) AS count
+// FROM reviews_of_places_with_tags rpt
+// JOIN tags ON tags.id = rpt.tag_id
+// WHERE rpt.place_id = ?
+// GROUP BY rpt.tag_id, tags.name
+// HAVING COUNT(*) > (SELECT COUNT(*) FROM reviews WHERE place_id = ?) / 3
+//   ) AS countTags
