@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { loginRequired } = require("../utils/auth");
-const { placeController } = require("../controllers/placeController")
+const { placeController } = require("../controllers")
 
 
 router.get("", loginRequired, placeController.getAllPlaces);

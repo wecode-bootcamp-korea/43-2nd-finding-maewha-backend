@@ -12,7 +12,7 @@ const getAllPlaces = catchAsync(async (req, res) => {
 
 const insertLikedPlace = catchAsync(async (req, res) => {
   const userId = req.user.id;
-  const {placeId} = req.body;
+  const placeId = +req.params.Id;
 
   if (!placeId) {
     const error = new Error("KEY_ERROR");
@@ -23,8 +23,9 @@ const insertLikedPlace = catchAsync(async (req, res) => {
 
   const result = await placeService.insertLikedPlace(userId, placeId);
 
-  return res.status(200).json({ result });
+  return res.status(201).json({ result });
 });
+
 
 
 

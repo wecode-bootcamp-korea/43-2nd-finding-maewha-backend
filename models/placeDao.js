@@ -6,7 +6,7 @@ const placesDetail = async (placeId) => {
  AVG(r.rating) AS avgRating, 
  COUNT(r.id) AS countReview,
  p.id, 
- p.social_id, 
+ p.social_id as socialId, 
  p.name, 
  p.address, 
  p.thumbnail, 
@@ -101,28 +101,28 @@ LEFT JOIN (
  INNER JOIN users u ON r.user_id = u.id
  GROUP BY r.place_id
 ) AS rrr ON p.id = r.place_id
-INNER JOIN (
-	SELECT 
+	INNER JOIN (
+		SELECT
 	  place_id,
 	  JSON_ARRAYAGG(
 	    JSON_OBJECT(
-	      "tagId", t.id,
-	      "tagName", t.name
+	      "tagId", rpt.tag_id,
+	      "tagName", t.name,
+	      "tagLikeCount", rpt.tagCount
 	    )
 	  ) AS mostLikedTags
 	FROM (
 	  SELECT 
-	    place_id, COALESCE(tag_id, 0) AS tag_id, COUNT(*) AS tagCount
+	    place_id, tag_id, COALESCE(COUNT(tag_id)) AS tagCount
 	  FROM reviews_of_places_with_tags
 	  GROUP BY place_id, tag_id
-	) AS rpt
-	INNER JOIN (
-	  SELECT id FROM tags ORDER BY id LIMIT 3
-	) AS tids ON rpt.tag_id = tids.id
+	  ORDER BY tagCount DESC, tag_id ASC
+	  LIMIT 3
+	) rpt
 	INNER JOIN tags t ON t.id = rpt.tag_id
 	GROUP BY place_id
 )AS mlt ON p.id = mlt.place_id
-WHERE p.id = 1
+WHERE p.id = ?
 GROUP BY 
  p.id,
  p.social_id,
@@ -137,7 +137,7 @@ GROUP BY
  pbic.basic_information,
  rl.likesCount,      
  rrr.reviewList,
- mlt.mostLikedTags`, [placeId, placeId, placeId]
+ mlt.mostLikedTags`, [placeId]
 );
 return result
 }
