@@ -8,7 +8,6 @@ const start = async () => {
   const PORT = process.env.PORT;
   try {
     await appDataSource.initialize();
-    console.log("DB Connection");
     app.get("/ping", (req, res) => {
       res.status(200).json({ message: "pong" });
     });
