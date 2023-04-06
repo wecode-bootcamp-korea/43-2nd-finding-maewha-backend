@@ -33,9 +33,15 @@ const addReview3 = async (reviewId, placeId, tagId) => {
   )
 }
 
+const addReviewAndRelations = async (userId, placeId, rating, comment, tagId) => {
+  const result = await addReview(userId, placeId, rating, comment);
+
+  await addReview2(result.insertId, userId);
+  await addReview3(result.insertId, placeId, tagId);
+  
+  return result;
+}
 
 module.exports = {
-  addReview,
-  addReview2,
-  addReview3
+  addReviewAndRelations
 }
