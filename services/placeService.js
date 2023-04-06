@@ -20,9 +20,16 @@ async function addLikedPlace(userId, placeId) {
 }
 
 
+const insertLikedPlace = async (userId, placeId) => {
+  const likedExists = await placeDao.likedExists(userId, placeId);
 
+  if (!likedExists) {
+    return placeDao.insertLikedPlace(userId, placeId);
+  }
+};
 
 module.exports = {
   getAllPlaces,
+  insertLikedPlace,
   addLikedPlace
 }

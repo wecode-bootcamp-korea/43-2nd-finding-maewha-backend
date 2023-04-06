@@ -4,6 +4,6 @@ const { loginRequired } = require("../utils/auth");
 
 const router = express.Router();
 
-router.post("", reviewController.addReview);
+router.post("", loginRequired, reviewController.addReview);
 
 module.exports = { router };
