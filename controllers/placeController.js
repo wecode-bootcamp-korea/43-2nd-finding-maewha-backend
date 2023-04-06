@@ -10,16 +10,25 @@ const getAllPlaces = catchAsync(async (req, res) => {
   return res.status(200).json({ result });
 });
 
-const likePlaces = catchAsync(async (req, res) => {
+const insertLikedPlace = catchAsync(async (req, res) => {
   const userId = req.user.id;
   const {placeId} = req.body;
+
+  if (!placeId) {
+    const error = new Error("KEY_ERROR");
+    error.statusCode = 400;
+
+    throw error;
+  }
 
   const result = await placeService.insertLikedPlace(userId, placeId);
 
   return res.status(200).json({ result });
 });
 
+
+
 module.exports = {
   getAllPlaces,
-  likePlaces
+  insertLikedPlace
 }

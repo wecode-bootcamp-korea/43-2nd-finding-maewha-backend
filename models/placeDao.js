@@ -101,26 +101,28 @@ LEFT JOIN (
  INNER JOIN users u ON r.user_id = u.id
  GROUP BY r.place_id
 ) AS rrr ON p.id = r.place_id
-LEFT JOIN (
-  SELECT
-  	place_id,
-  	JSON_ARRAYAGG(
-  	JSON_OBJECT(
-    "id", rpt.tag_id,
-    "tagName", t.name
-  	)
-  ) AS mostLikedTags
-FROM 
-    reviews_of_places_with_tags rpt
-INNER JOIN tags t ON t.id = rpt.tag_id
-GROUP BY 
-    rpt.place_id
-ORDER BY 
-    COUNT(rpt.tag_id) DESC 
-LIMIT 
-    2
+INNER JOIN (
+	SELECT 
+	  place_id,
+	  JSON_ARRAYAGG(
+	    JSON_OBJECT(
+	      "tagId", t.id,
+	      "tagName", t.name
+	    )
+	  ) AS mostLikedTags
+	FROM (
+	  SELECT 
+	    place_id, COALESCE(tag_id, 0) AS tag_id, COUNT(*) AS tagCount
+	  FROM reviews_of_places_with_tags
+	  GROUP BY place_id, tag_id
+	) AS rpt
+	INNER JOIN (
+	  SELECT id FROM tags ORDER BY id LIMIT 3
+	) AS tids ON rpt.tag_id = tids.id
+	INNER JOIN tags t ON t.id = rpt.tag_id
+	GROUP BY place_id
 )AS mlt ON p.id = mlt.place_id
-WHERE p.id = ?
+WHERE p.id = 1
 GROUP BY 
  p.id,
  p.social_id,
@@ -134,22 +136,25 @@ GROUP BY
  pi.images,
  pbic.basic_information,
  rl.likesCount,      
- rrr.reviewList`, [placeId, placeId, placeId]
+ rrr.reviewList,
+ mlt.mostLikedTags`, [placeId, placeId, placeId]
 );
 return result
 }
 
-async function insertLikedPlace(userId, placeId) {
-  const result = await appDataSource.query(
-    `INSERT INTO liked_places (libraries_id, place_id) 
-    VALUES (
-      (SELECT id FROM libraries WHERE user_id = ?),
-      ?
-    )`,
-    [userId, placeId]
+const insertLikedPlace = async (userId, placeId) => {
+  const likedPlace = await appDataSource.query(
+    `
+      INSERT
+      INTO likedPlace (
+        user_id,
+        place_id
+      ) VALUES (?, ?)
+    `, [userId, placeId]
   );
-  return result;
-}
+
+  return likedPlace.insertId
+};
 
 module.exports = {
   placesDetail,
