@@ -5,6 +5,6 @@ const { placeController } = require("../controllers")
 
 
 router.get("", loginRequired, placeController.getAllPlaces);
-router.post("/likeplaces", loginRequired, placeController.insertLikedPlace);
+router.post("/:placeId", loginRequired, placeController.insertLikedPlace);
 
 module.exports = { router }

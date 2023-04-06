@@ -142,6 +142,15 @@ GROUP BY
 return result
 }
 
+const likedExists = async (userId, placeId) => {
+  const [result] = await appDataSource.query(`
+    SELECT * FROM liked_places
+    WHERE user_id = ? AND place_id = ?`, 
+    [userId, placeId]
+  );
+  return result;
+};
+
 const insertLikedPlace = async (userId, placeId) => {
   const likedPlace = await appDataSource.query(
     `
@@ -158,6 +167,7 @@ const insertLikedPlace = async (userId, placeId) => {
 
 module.exports = {
   placesDetail,
+  likedExists,
   insertLikedPlace
 }
 
