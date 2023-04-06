@@ -1,7 +1,7 @@
 const { appDataSource } = require("./data-source.js");
 
-const addReview = async (userId, placeId, rating, comment) => {
-  return await appDataSource.query(`
+const addReview = async (userId, placeId, rating, comment, tagId) => {
+  const review = await appDataSource.query(`
     INSERT INTO reviews (
       user_id,
       place_id, 
@@ -10,20 +10,17 @@ const addReview = async (userId, placeId, rating, comment) => {
     ) VALUES (?, ?, ?, ?)`,
     [userId, placeId, rating, comment]
   );
-}
+  const reviewId = review.insertId
 
-const addReview2 = async (reviewId, userId) => {
-  return await appDataSource.query(`
+  await appDataSource.query(`
   INSERT INTO review_likes (
     review_id,
     user_id
   ) VALUES (?, ?)`,
   [reviewId, userId]
   )
-}
 
-const addReview3 = async (reviewId, placeId, tagId) => {
-  return await appDataSource.query(`
+  await appDataSource.query(`
   INSERT INTO reviews_of_places_with_tags (
     review_id,
     place_id,
@@ -33,15 +30,6 @@ const addReview3 = async (reviewId, placeId, tagId) => {
   )
 }
 
-const addReviewAndRelations = async (userId, placeId, rating, comment, tagId) => {
-  const result = await addReview(userId, placeId, rating, comment);
-
-  await addReview2(result.insertId, userId);
-  await addReview3(result.insertId, placeId, tagId);
-  
-  return result;
-}
-
 module.exports = {
-  addReviewAndRelations
+  addReview
 }

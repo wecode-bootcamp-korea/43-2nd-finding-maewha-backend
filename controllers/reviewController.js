@@ -3,11 +3,11 @@ const { catchAsync } = require("../utils/error");
 
 const addReview = catchAsync (async (req, res) => {
   const userId = 5;
-  const { placeId, rating, comment} = req.body;
+  const { placeId, rating, comment, reviewId, tagId} = req.body;
   if(!userId || !rating || !comment) {
     return res.status(400).json({ message: "KEY_ERROR" })
   }
-  await reviewService.addReview(userId, placeId, rating, comment)
+  await reviewService.addReview(userId, placeId, rating, comment, tagId)
   return res.status(201).json({ message: "CREATED_REVIEW" })
 })
 
