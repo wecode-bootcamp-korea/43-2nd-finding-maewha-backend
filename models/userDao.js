@@ -29,6 +29,7 @@ const getPlacesInLibrary = async (userId, libraryId) => {
         JSON_OBJECT(
           "placeId", lp.place_id,
           "placeName", pl.name,
+          "placeImage", pl.thumbnail,
           "reviewRating", (SELECT COALESCE(AVG(rating), 0)
                       FROM reviews
                       WHERE place_id = lp.place_id),
@@ -74,12 +75,12 @@ const createPlaceLike = async (userId, libraryId, placeId) => {
 
   try {
     const [checkOwner] = await queryRunner.query(
-      `SELECT * FROM libraries
+      `SELECT id FROM libraries
       WHERE id = ? AND user_id = ?
       `,
       [libraryId, userId]
     );
-    if (!checkOwner) {
+    if (!checkOwner.id) {
       await queryRunner.rollbackTransaction();
       const error = new Error("NOT_YOUR_LIBRARY");
       error.statusCode = 401;
@@ -93,7 +94,8 @@ const createPlaceLike = async (userId, libraryId, placeId) => {
       `,
       [userId, placeId]
     );
-    if (!checkLiked) {
+
+    if (checkLiked != undefined) {
       await queryRunner.rollbackTransaction();
       const error = new Error("LIKE_ALREADY_EXIST");
       error.statusCode = 401;
