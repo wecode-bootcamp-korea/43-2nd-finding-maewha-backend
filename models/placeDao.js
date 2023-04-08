@@ -1,8 +1,8 @@
-const { appDataSource } = require('./data-source')
+const { appDataSource } = require("./data-source");
 
 const placesDetail = async (placeId) => {
   const result = await appDataSource.query(
- `SELECT 
+    `SELECT 
  AVG(r.rating) AS avgRating, 
  COUNT(r.id) AS countReview,
  p.id, 
@@ -137,15 +137,17 @@ GROUP BY
  pbic.basic_information,
  rl.likesCount,      
  rrr.reviewList,
- mlt.mostLikedTags`, [placeId]
-);
-return result
-}
+ mlt.mostLikedTags`,
+    [placeId]
+  );
+  return result;
+};
 
 const likedExists = async (userId, placeId) => {
-  const [result] = await appDataSource.query(`
+  const [result] = await appDataSource.query(
+    `
     SELECT * FROM liked_places
-    WHERE user_id = ? AND place_id = ?`, 
+    WHERE user_id = ? AND place_id = ?`,
     [userId, placeId]
   );
   return result;
@@ -159,17 +161,181 @@ const insertLikedPlace = async (userId, placeId) => {
         user_id,
         place_id
       ) VALUES (?, ?)
-    `, [userId, placeId]
+    `,
+    [userId, placeId]
   );
 
-  return likedPlace.insertId
+  return likedPlace.insertId;
+};
+
+const { appDataSource } = require("./data-source.js");
+
+const getPlaces = async (userId, offset, tagList, tagListLength) => {
+  try {
+    let query = `
+      SELECT
+        JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'placeId', places.id,
+            'placeName', places.name,
+            'placeAddress', places.address,
+            'placeThumbnail', places.thumbnail,
+            'placeLatitude', places.latitude,
+            'placeLongitude', places.longitude,
+            'placeRating', COALESCE(
+              (SELECT 
+                AVG(reviews.rating)
+              FROM reviews
+              WHERE place_id = places.id), 0
+            ),
+            'reviewCount', COALESCE(
+              (SELECT 
+                COUNT(reviews.id)
+              FROM reviews
+              WHERE place_id = places.id), 0
+            ),
+            'userLiked', COALESCE(
+              (SELECT 
+                liked_places.place_id
+              FROM liked_places
+              WHERE liked_places.libraries_id = libraries.id
+              AND liked_places.place_id = places.id), 0
+            ),
+            
+            'placeTags', 
+            (
+              SELECT 
+                JSON_ARRAYAGG(
+                  JSON_OBJECT(
+                    'tagId', reviews_of_places_with_tags.tag_id,
+                    'tagName', tags.name,
+                    'count', review_tag_count.tag_count 
+                  )
+                )
+              FROM reviews_of_places_with_tags
+              JOIN tags ON tags.id = reviews_of_places_with_tags.tag_id
+              JOIN (
+                    SELECT
+                      reviews_of_places_with_tags.tag_id,
+                      COUNT(*) AS tag_count
+                      FROM reviews_of_places_with_tags
+                      WHERE reviews_of_places_with_tags.place_id = places.id
+                      GROUP BY reviews_of_places_with_tags.tag_id
+                      HAVING COUNT(*) > (
+                        SELECT COUNT(*)
+                        FROM reviews
+                        WHERE place_id = places.id) / 3
+                      ) AS review_tag_count 
+                ON review_tag_count.tag_id = reviews_of_places_with_tags.tag_id
+              WHERE reviews_of_places_with_tags.place_id = places.id
+            )
+          )
+        ) AS placeList
+      FROM places
+      LEFT JOIN libraries ON libraries.user_id = ${userId}
+      LEFT JOIN liked_places ON liked_places.libraries_id = libraries.id AND liked_places.place_id = places.id
+
+    `;
+    if (tagList !== "0") {
+      query += `
+      JOIN reviews_of_places_with_tags ON reviews_of_places_with_tags.place_id = places.id
+      WHERE reviews_of_places_with_tags.tag_id IN (${tagList})`;
+    }
+    query += `
+    GROUP BY places.id`;
+    if (tagList != "0") {
+      query += `
+      HAVING COUNT(DISTINCT reviews_of_places_with_tags.tag_id) >= ${tagListLength}`;
+    }
+    query += `
+    ORDER BY places.id ASC LIMIT 6 OFFSET ${offset}`;
+    return await appDataSource.query(query);
+  } catch (err) {
+    console.log(err);
+    const error = new Error("INVALID_DATA_INPUT");
+    error.statusCode = 400;
+    throw error;
+  }
+};
+
+const visitorGetPlaces = async (tagList, tagListLength, offset) => {
+  try {
+    let query = `SELECT
+      JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'placeId', places.id,
+            'placeName', places.name,
+            'placeAddress', places.address,
+            'placeThumbnail', places.thumbnail,
+            'placeLatitude', places.latitude,
+            'placeLongitude', places.longitude,
+            'placeRating', COALESCE((SELECT AVG(reviews.rating)
+                                     FROM reviews
+                                     WHERE place_id = places.id), 0),
+            'reviewCount', COALESCE((SELECT COUNT(reviews.id)
+                                      FROM reviews
+                                      WHERE place_id = places.id), 0),
+            
+            'placeTags', (SELECT
+                            JSON_ARRAYAGG (
+                               JSON_OBJECT (
+                                  'tagId', reviews_of_places_with_tags.tag_id,
+                                  'tagName', tags.name,
+                                  'count', review_tag_count.tag_count
+                                  )
+                              )
+                            FROM
+                            reviews_of_places_with_tags
+                            JOIN tags ON tags.id = reviews_of_places_with_tags.tag_id
+                            JOIN (
+                            SELECT 
+                            reviews_of_places_with_tags.tag_id,
+                            COUNT(*) AS tag_count
+                            FROM
+                            reviews_of_places_with_tags
+                            WHERE
+                            reviews_of_places_with_tags.place_id = places.id
+                            GROUP BY
+                            reviews_of_places_with_tags.tag_id 
+                            HAVING
+                            COUNT(*) > (SELECT COUNT(*)
+                                        FROM
+                                        reviews
+                                        WHERE
+                                        place_id = places.id) / 3
+                                        ) AS review_tag_count ON review_tag_count.tag_id = reviews_of_places_with_tags.tag_id
+                            WHERE
+                            reviews_of_places_with_tags.place_id = places.id)
+          )
+      ) AS placeList
+      FROM places
+      `;
+    if (tagList !== "0") {
+      query += `
+        JOIN reviews_of_places_with_tags ON reviews_of_places_with_tags.place_id = places.id
+        WHERE reviews_of_places_with_tags.tag_id IN (${tagList})`;
+    }
+    query += `
+    GROUP BY places.id`;
+    if (tagList != "0") {
+      query += `
+      HAVING COUNT(DISTINCT reviews_of_places_with_tags.tag_id) >= ${tagListLength}`;
+    }
+    query += `
+    ORDER BY places.id ASC LIMIT 6 OFFSET ${offset}`;
+    return await appDataSource.query(query);
+  } catch (err) {
+    console.log(err);
+    const error = new Error("INVALID_DATA_INPUT");
+    error.statusCode = 400;
+    throw error;
+  }
 };
 
 module.exports = {
   placesDetail,
   likedExists,
-  insertLikedPlace
-}
-
-
-
+  insertLikedPlace,
+  getPlaces,
+  visitorGetPlaces,
+};
