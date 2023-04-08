@@ -54,6 +54,11 @@
 - 프로젝트를 진행하면서 느꼈던 점들이나 생각들을 기록해두는 습관을 기르고 싶습니다.
 
 ---
+## ERD
+![스크린샷 2023-04-08 오후 6 57 46](https://user-images.githubusercontent.com/110710238/230715432-9fc5f22b-c883-4c4b-8853-f67590a41dc6.png)
+
+
+---
 ## 이용기술
 
 |                                                                                                       JavaScript                                                                                                        |                                                                                              &nbsp;&nbsp;NodeJs&nbsp;&nbsp;                                                                                               |                                                                                        &nbsp;&nbsp;&nbsp;MySql&nbsp;&nbsp;&nbsp;                                                                                         |                                                                                    &nbsp;&nbsp;&nbsp;&nbsp;Rest&nbsp;&nbsp;&nbsp;&nbsp;                                                                                     |                                                                                           &nbsp;&nbsp;&nbsp;Prittier&nbsp;&nbsp;&nbsp;                                                                                            |
